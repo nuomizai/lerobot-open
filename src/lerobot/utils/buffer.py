@@ -169,7 +169,6 @@ class ReplayBuffer:
 
         if self.has_complementary_info:
             self.complementary_info_keys = list(complementary_info.keys())
-            print('self.complementary_info_keys:', self.complementary_info_keys)
             # Pre-allocate tensors for each key in complementary_info
             for key, value in complementary_info.items():
                 if isinstance(value, torch.Tensor):
@@ -476,10 +475,7 @@ class ReplayBuffer:
         image_augmentation_function: Callable | None = None,
         use_drq: bool = True,
         storage_device: str = "cpu",
-        optimize_memory: bool = False,
-        update_is_intervention: bool = True,
-        update_reward: bool = True,
-        use_gripper_penalty: bool = False,
+        optimize_memory: bool = False
     ) -> "ReplayBuffer":
         """
         Convert a LeRobotDataset into a ReplayBuffer.
@@ -516,9 +512,6 @@ class ReplayBuffer:
             storage_device=storage_device,
             optimize_memory=optimize_memory,
         )
-        # Convert dataset to transitions
-        print('state_keys:', state_keys)
-        print('lerobot_dataset:', lerobot_dataset)
 
         list_transition = cls._lerobotdataset_to_transitions(dataset=lerobot_dataset, state_keys=state_keys)
 
@@ -530,11 +523,11 @@ class ReplayBuffer:
 
             # Get complementary info if available
             # first_complementary_info = None
-            first_complementary_info = {
-                "grasp_penalty": 0.0,
-                "discrete_penalty": 0.0,
-                "is_intervention": 0,
-            }
+            # first_complementary_info = {
+            #     "grasp_penalty": 0.0,
+            #     "discrete_penalty": 0.0,
+            #     "is_intervention": 0,
+            # }
             if (
                 "complementary_info" in first_transition
                 and first_transition["complementary_info"] is not None
@@ -548,7 +541,7 @@ class ReplayBuffer:
                 state=first_state, action=first_action, complementary_info=first_complementary_info
             )
 
-        last_gripper_pos = None
+        # last_gripper_pos = None
         # Fill the buffer with all transitions
         for data in list_transition:
             for k, v in data.items():
@@ -560,57 +553,57 @@ class ReplayBuffer:
 
             action = data["action"]
             # print("data['reward']", data['reward'])
-            try:
-                if not os.path.exists("offline_wrist_image.png"):
-                    right_image = data["state"]["observation.images.right"][0].permute(1, 2, 0) * 255
-                    right_image_np = right_image.cpu().numpy().astype('uint8')
-                    right_image_bgr = cv2.cvtColor(right_image_np, cv2.COLOR_RGB2BGR)
-                    right_image_path = os.path.abspath("offline_right_image.png")
-                    cv2.imwrite(right_image_path, right_image_bgr)
+            # try:
+            #     if not os.path.exists("offline_wrist_image.png"):
+            #         right_image = data["state"]["observation.images.right"][0].permute(1, 2, 0) * 255
+            #         right_image_np = right_image.cpu().numpy().astype('uint8')
+            #         right_image_bgr = cv2.cvtColor(right_image_np, cv2.COLOR_RGB2BGR)
+            #         right_image_path = os.path.abspath("offline_right_image.png")
+            #         cv2.imwrite(right_image_path, right_image_bgr)
                     
-                    wrist_image = data["state"]["observation.images.wrist"][0].permute(1, 2, 0) * 255
-                    wrist_image_np = wrist_image.cpu().numpy().astype('uint8')
-                    wrist_image_bgr = cv2.cvtColor(wrist_image_np, cv2.COLOR_RGB2BGR)
-                    wrist_image_path = os.path.abspath("offline_wrist_image.png")
-                    cv2.imwrite(wrist_image_path, wrist_image_bgr)
-                    print(f'successfully save images:')
-                    print(f'  right_image: {right_image_path}')
-                    print(f'  wrist_image: {wrist_image_path}')
+            #         wrist_image = data["state"]["observation.images.wrist"][0].permute(1, 2, 0) * 255
+            #         wrist_image_np = wrist_image.cpu().numpy().astype('uint8')
+            #         wrist_image_bgr = cv2.cvtColor(wrist_image_np, cv2.COLOR_RGB2BGR)
+            #         wrist_image_path = os.path.abspath("offline_wrist_image.png")
+            #         cv2.imwrite(wrist_image_path, wrist_image_bgr)
+            #         print(f'successfully save images:')
+            #         print(f'  right_image: {right_image_path}')
+            #         print(f'  wrist_image: {wrist_image_path}')
 
-            except Exception as e:
-                print(f"WARN: Ignoring invalid image: {e}")
-                exit(0)
+            # except Exception as e:
+            #     print(f"WARN: Ignoring invalid image: {e}")
+            #     exit(0)
         
             # if last_gripper_pos is None:
                 # print('state.keys()', data['state'].keys())
-            last_gripper_pos = data["state"]["observation.state"][0][7]
+            # last_gripper_pos = data["state"]["observation.state"][0][7]
             
             # print(">>>>>>>>> complementary_info", data['complementary_info'].keys())
 
-            if data['complementary_info'] is None:
-                data['complementary_info'] = {}
-                data['complementary_info']['grasp_penalty'] = 0.0
-                data['complementary_info']['discrete_penalty'] = 0.0            
-            # if "is_intervention" in data["complementary_info"].keys():
-            if update_is_intervention:
-                data['complementary_info']['is_intervention'] = 1
+            # if data['complementary_info'] is None:
+            #     data['complementary_info'] = {}
+            #     data['complementary_info']['grasp_penalty'] = 0.0
+            #     data['complementary_info']['discrete_penalty'] = 0.0            
+            # # if "is_intervention" in data["complementary_info"].keys():
+            # if update_is_intervention:
+            #     data['complementary_info']['is_intervention'] = 1
 
-            if update_reward:
+            # if update_reward:
 
-                if use_gripper_penalty:
-                    if (action[0][-1] > 0.3 and last_gripper_pos < 0.3) or (action[0][-1] < 0.5 and last_gripper_pos > 0.5):
-                        # data['complementary_info']['grasp_penalty'] = -0.4
-                        # data['complementary_info']['discrete_penalty'] = -0.4
-                        # data['complementary_info']['grasp_penalty'] = -0.2
-                        # data['complementary_info']['discrete_penalty'] = -0.2
-                        data['complementary_info']['grasp_penalty'] = -0.5
-                        data['complementary_info']['discrete_penalty'] = -0.5
-                    else:
-                        data['complementary_info']['grasp_penalty'] = 0.0
-                        data['complementary_info']['discrete_penalty'] = 0.0
-                data['reward'] = 10 if data['done'] else -0.05
+            #     if use_gripper_penalty:
+            #         if (action[0][-1] > 0.3 and last_gripper_pos < 0.3) or (action[0][-1] < 0.5 and last_gripper_pos > 0.5):
+            #             # data['complementary_info']['grasp_penalty'] = -0.4
+            #             # data['complementary_info']['discrete_penalty'] = -0.4
+            #             # data['complementary_info']['grasp_penalty'] = -0.2
+            #             # data['complementary_info']['discrete_penalty'] = -0.2
+            #             data['complementary_info']['grasp_penalty'] = -0.5
+            #             data['complementary_info']['discrete_penalty'] = -0.5
+            #         else:
+            #             data['complementary_info']['grasp_penalty'] = 0.0
+            #             data['complementary_info']['discrete_penalty'] = 0.0
+            #     data['reward'] = 10 if data['done'] else -0.05
 
-            assert 'discrete_penalty' in data['complementary_info'].keys(), "discrete_penalty not in data['complementary_info']"
+            # assert 'discrete_penalty' in data['complementary_info'].keys(), "discrete_penalty not in data['complementary_info']"
             
             """
                 offline action 边缘裁剪
@@ -950,10 +943,14 @@ def concatenate_batch_transitions(
         dim=0,
     )
 
-    left_batch_transitions["is_intervention"] = torch.cat(
-        [left_batch_transitions["is_intervention"], right_batch_transition["is_intervention"]],
-        dim=0,
-    )
+    if "is_intervention" in left_batch_transitions and "is_intervention" in right_batch_transition.keys():
+        left_batch_transitions["is_intervention"] = torch.cat(
+            [left_batch_transitions["is_intervention"], right_batch_transition["is_intervention"]],
+            dim=0,
+        )
+    else:
+        left_batch_transitions["is_intervention"] = None
+
     # Handle complementary_info
     left_info = left_batch_transitions.get("complementary_info")
     right_info = right_batch_transition.get("complementary_info")
