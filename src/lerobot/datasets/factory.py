@@ -87,7 +87,6 @@ def make_dataset(cfg: TrainPipelineConfig) -> LeRobotDataset | MultiLeRobotDatas
             cfg.dataset.repo_id, root=cfg.dataset.root, revision=cfg.dataset.revision
         )
         delta_timestamps = resolve_delta_timestamps(cfg.policy, ds_meta)
-        print('-------> cfg.dataset.root:', cfg.dataset.root)
         dataset = LeRobotDataset(
             cfg.dataset.repo_id,
             root=cfg.dataset.root,
