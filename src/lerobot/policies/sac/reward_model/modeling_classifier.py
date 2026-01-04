@@ -266,16 +266,10 @@ class Classifier(PreTrainedPolicy):
             # Multi-class classification
             loss = nn.functional.cross_entropy(outputs.logits, labels.long())
             predictions = torch.argmax(outputs.logits, dim=1)
-
-        # Calculate accuracy for logging
-        # print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-        # for i in range(len(predictions)):
-        #     print(i, predictions[i], labels[i])
         
         correct = (predictions == labels).sum().item()
         total = labels.size(0)
         accuracy = 100 * correct / total
-        print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> accuracy: ', accuracy)
         # Return loss and metrics for logging
         output_dict = {
             "accuracy": accuracy,
@@ -294,12 +288,7 @@ class Classifier(PreTrainedPolicy):
         # Extract images from batch dict
         images = [batch[key] for key in self.config.input_features if key.startswith(OBS_IMAGE)]
         if self.config.num_classes == 2:
-            for image in images:
-                print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> image: ', image.shape)
             probs = self.predict(images).probabilities
-            logging.debug(f"Predicted reward images: {probs}")
-            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> predict_reward: ', probs)
-            
             return (probs > threshold).float()
         else:
             return torch.argmax(self.predict(images).probabilities, dim=1)
