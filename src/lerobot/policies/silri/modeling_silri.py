@@ -57,6 +57,7 @@ class SiLRIPolicy(
 
         # Determine action dimension and initialize all components
         continuous_action_dim = config.output_features["action"].shape[0]
+        self.continuous_action_dim = continuous_action_dim
         
         self._init_normalization(dataset_stats)
         # 初始化观测编码器（Actor与Critic可共享或独立）
@@ -286,7 +287,7 @@ class SiLRIPolicy(
             )
 
     def compute_loss_expert(self, observations, actions, observation_features: Tensor | None = None, is_intervention: Tensor | None = None) -> Tensor:
-        log_probs = self.expert_network.get_log_probs(observations, actions[:, 0:6], observation_features)
+        log_probs = self.expert_network.get_log_probs(observations, actions[:, 0:self.continuous_action_dim], observation_features)
         
         loss_expert = - log_probs * is_intervention
         loss_expert = loss_expert.sum() / is_intervention.sum().item()
@@ -296,7 +297,7 @@ class SiLRIPolicy(
         return loss_expert, allow_distance  
 
     def compute_loss_actor_bc(self, observations, actions, observation_features: Tensor | None = None, is_intervention: Tensor | None = None) -> Tensor:
-        log_probs = self.actor.get_log_probs(observations, actions[:, 0:6], observation_features)
+        log_probs = self.actor.get_log_probs(observations, actions[:, 0:self.continuous_action_dim], observation_features)
         loss_actor_bc = - log_probs * is_intervention
         loss_actor_bc = loss_actor_bc.sum() / is_intervention.sum().item()
         return {
@@ -358,7 +359,7 @@ class SiLRIPolicy(
             td_target = rewards + (1 - done) * self.config.discount * min_q
 
 
-        actions = actions[:, :6]
+        actions = actions[:, :self.continuous_action_dim]
         q_preds = self.critic_forward(
             observations=observations,
             actions=actions,
