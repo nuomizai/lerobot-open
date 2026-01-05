@@ -110,20 +110,6 @@ class AWACPolicy(
         """
         observations_features = None
 
-        # if not os.path.exists("right_image_online.png"):
-        #     right_image = batch["observation.images.right"][0].permute(1, 2, 0) * 255
-        #     print("right_image value range:", right_image.max(), right_image.min())
-        #     right_image_np = right_image.cpu().numpy().astype('uint8')
-        #     right_image_bgr = cv2.cvtColor(right_image_np, cv2.COLOR_RGB2BGR)
-
-        #     cv2.imwrite("right_image_online.png", right_image_bgr)
-            
-        #     wrist_image = batch["observation.images.wrist"][0].permute(1, 2, 0) * 255
-        #     wrist_image_np = wrist_image.cpu().numpy().astype('uint8')
-        #     wrist_image_bgr = cv2.cvtColor(wrist_image_np, cv2.COLOR_RGB2BGR)
-        #     cv2.imwrite("wrist_image_online.png", wrist_image_bgr)
-        #     print('successfully save image')
-
         
         # 若共享编码器且含图像，缓存图像特征（避免重复编码，提升速度）
         if self.shared_encoder and self.actor.encoder.has_images:
@@ -140,7 +126,7 @@ class AWACPolicy(
             discrete_action = torch.argmax(discrete_action_value, dim=-1, keepdim=True)
 
             actions = torch.cat([actions, discrete_action], dim=-1)
-        return actions, {'prob1': 0, 'discrete_action_value': discrete_action_value}
+        return actions, {}
 
     def critic_forward(
         self,

@@ -203,10 +203,7 @@ class ReplayBuffer:
         if not self.initialized:
             self._initialize_storage(state=state, action=action, complementary_info=complementary_info)
 
-        # print("state:", state)
-        # print("next_state:", next_state)
-        # print("self.states:", self.states)
-        # Store the transition in pre-allocated tensors
+
         for key in self.states:
 
             self.states[key][self.position].copy_(state[key].squeeze(dim=0))
@@ -521,12 +518,7 @@ class ReplayBuffer:
             first_state = {k: v.to(device) for k, v in first_transition["state"].items()}
             first_action = first_transition["action"].to(device)
 
-            # Get complementary info if available
-            # first_complementary_info = None
-            # first_complementary_info = {
-            #     "grasp_penalty": 0.0,
-            #     "discrete_penalty": 0.0,
-            #     "is_intervention": 0,
+
             # }
             if (
                 "complementary_info" in first_transition
@@ -552,59 +544,6 @@ class ReplayBuffer:
                     data[k] = v.to(storage_device)
 
             action = data["action"]
-            # print("data['reward']", data['reward'])
-            # try:
-            #     if not os.path.exists("offline_wrist_image.png"):
-            #         right_image = data["state"]["observation.images.right"][0].permute(1, 2, 0) * 255
-            #         right_image_np = right_image.cpu().numpy().astype('uint8')
-            #         right_image_bgr = cv2.cvtColor(right_image_np, cv2.COLOR_RGB2BGR)
-            #         right_image_path = os.path.abspath("offline_right_image.png")
-            #         cv2.imwrite(right_image_path, right_image_bgr)
-                    
-            #         wrist_image = data["state"]["observation.images.wrist"][0].permute(1, 2, 0) * 255
-            #         wrist_image_np = wrist_image.cpu().numpy().astype('uint8')
-            #         wrist_image_bgr = cv2.cvtColor(wrist_image_np, cv2.COLOR_RGB2BGR)
-            #         wrist_image_path = os.path.abspath("offline_wrist_image.png")
-            #         cv2.imwrite(wrist_image_path, wrist_image_bgr)
-            #         print(f'successfully save images:')
-            #         print(f'  right_image: {right_image_path}')
-            #         print(f'  wrist_image: {wrist_image_path}')
-
-            # except Exception as e:
-            #     print(f"WARN: Ignoring invalid image: {e}")
-            #     exit(0)
-        
-            # if last_gripper_pos is None:
-                # print('state.keys()', data['state'].keys())
-            # last_gripper_pos = data["state"]["observation.state"][0][7]
-            
-            # print(">>>>>>>>> complementary_info", data['complementary_info'].keys())
-
-            # if data['complementary_info'] is None:
-            #     data['complementary_info'] = {}
-            #     data['complementary_info']['grasp_penalty'] = 0.0
-            #     data['complementary_info']['discrete_penalty'] = 0.0            
-            # # if "is_intervention" in data["complementary_info"].keys():
-            # if update_is_intervention:
-            #     data['complementary_info']['is_intervention'] = 1
-
-            # if update_reward:
-
-            #     if use_gripper_penalty:
-            #         if (action[0][-1] > 0.3 and last_gripper_pos < 0.3) or (action[0][-1] < 0.5 and last_gripper_pos > 0.5):
-            #             # data['complementary_info']['grasp_penalty'] = -0.4
-            #             # data['complementary_info']['discrete_penalty'] = -0.4
-            #             # data['complementary_info']['grasp_penalty'] = -0.2
-            #             # data['complementary_info']['discrete_penalty'] = -0.2
-            #             data['complementary_info']['grasp_penalty'] = -0.5
-            #             data['complementary_info']['discrete_penalty'] = -0.5
-            #         else:
-            #             data['complementary_info']['grasp_penalty'] = 0.0
-            #             data['complementary_info']['discrete_penalty'] = 0.0
-            #     data['reward'] = 10 if data['done'] else -0.05
-
-            # assert 'discrete_penalty' in data['complementary_info'].keys(), "discrete_penalty not in data['complementary_info']"
-            
             """
                 offline action 边缘裁剪
             """
@@ -955,8 +894,6 @@ def concatenate_batch_transitions(
     left_info = left_batch_transitions.get("complementary_info")
     right_info = right_batch_transition.get("complementary_info")
 
-    # assert 'discrete_penalty' in right_info.keys(), "discrete_penalty not in right_info"
-    # assert 'discrete_penalty' in left_info.keys(), "discrete_penalty not in left_info"
     # Only process if right_info exists
     if right_info is not None:
         # Initialize left complementary_info if needed

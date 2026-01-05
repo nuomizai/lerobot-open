@@ -126,26 +126,9 @@ class HGDaggerPolicy(
         # actor网络生成当前观测对应的基础动作
         actions, *_ = self.actor(batch, observations_features)
 
-        # if policy_noise is not None:
-        #     # only add noise to the continuous action
-        #     noise = (
-		# 		torch.randn_like(actions) * policy_noise
-		# 	).clamp(-self.config.noise_clip, self.config.noise_clip)
-        #     noise = noise.to(actions.device)
-			
-        #     # noise = torch.normal(0, std, size=actions.size()) 
-        #     actions = actions + noise
 
         epsilon = 1e-6
         actions = torch.clamp(actions, -1+epsilon, 1-epsilon)
-
-        # 3.选择动作的时候将得到的动作处理成离散输出
-        # todo5:删掉原来合并过来的夹爪, 离散处理
-        # action_ee = actions[:,0:6]
-        # action_gripper = actions[:,6]
-        # action_gripper = torch.where(action_gripper >= 0.5, torch.tensor(1.0, device=action_gripper.device), torch.tensor(0.0, device=action_gripper.device))
-        # action_gripper = action_gripper.unsqueeze(-1) 
-        # actions = torch.cat([action_ee, action_gripper], dim=-1) 
 
         # 若有离散动作，离散Critic输出各动作价值，选价值最大的动作
         # todo11
@@ -155,11 +138,8 @@ class HGDaggerPolicy(
             discrete_action = torch.argmax(discrete_action_value, dim=-1, keepdim=True)
 
             actions = torch.cat([actions, discrete_action], dim=-1)
-        # probs = self.prob_ensemble(observations=batch, observation_features=observations_features)
-        info = {
-            "prob1": 0,
-        }
-        return actions, info
+
+        return actions, {}
 
     def critic_forward(
         self,

@@ -68,10 +68,10 @@ def get_policy_class(name: str) -> PreTrainedPolicy:
         from lerobot.policies.sac.modeling_sac import SACPolicy
 
         return SACPolicy
-    # elif name == "hgdagger":
-    #     from lerobot.policies.hgdagger.modeling_hgdagger import HGDaggerPolicy
+    elif name == "hgdagger":
+        from lerobot.policies.hgdagger.modeling_hgdagger import HGDaggerPolicy
 
-    #     return HGDaggerPolicy
+        return HGDaggerPolicy
     elif name == "silri":
         from lerobot.policies.silri.modeling_silri import SiLRIPolicy
 
@@ -107,8 +107,10 @@ def make_policy_config(policy_type: str, **kwargs) -> PreTrainedConfig:
         return SmolVLAConfig(**kwargs)
     elif policy_type == "reward_classifier":
         return RewardClassifierConfig(**kwargs)
-    # elif policy_type == "hgdagger":
-    #     return HGDaggerConfig(**kwargs)
+    elif policy_type == "awac":
+        return AWACConfig(**kwargs)
+    elif policy_type == "hgdagger":
+        return HGDaggerConfig(**kwargs)
     elif policy_type == "silri":
         return SiLRIConfig(**kwargs)
     else:
