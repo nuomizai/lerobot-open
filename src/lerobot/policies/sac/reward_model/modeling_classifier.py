@@ -266,7 +266,8 @@ class Classifier(PreTrainedPolicy):
             # Multi-class classification
             loss = nn.functional.cross_entropy(outputs.logits, labels.long())
             predictions = torch.argmax(outputs.logits, dim=1)
-        
+
+            
         correct = (predictions == labels).sum().item()
         total = labels.size(0)
         accuracy = 100 * correct / total
