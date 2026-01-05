@@ -315,7 +315,7 @@ class SiLRIPolicy(
             cost_dev = mean_distance - allow_distance
 
 
-            cost_dev = cost_dev - 0.1
+            cost_dev = cost_dev - 0.2
 
         lagrange_multiplier = self.lagrange_net(observations, observation_features=observation_features)
         lagrange_multiplier = lagrange_multiplier.squeeze(-1)
